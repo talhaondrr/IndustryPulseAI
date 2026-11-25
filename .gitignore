@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 .spark/
+.mlflow/
+.local/
+mlruns/
+mlartifacts/
+mlflow.db*
+dashboard/**/bin/
+dashboard/**/obj/
+dashboard/**/.vs/
 .env
 .env.*
 !.env.example

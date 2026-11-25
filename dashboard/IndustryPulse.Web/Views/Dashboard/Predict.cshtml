@@ -1,0 +1,29 @@
+@model PredictionPage
+@{ ViewData["Title"] = "AI Prediction"; }
+<header class="page-heading"><div><span class="eyebrow">INTELLIGENCE</span><h1>AI Prediction</h1><p>Score a sensor reading using the deployed XGBoost model.</p></div></header>
+<div class="overview-grid prediction-grid">
+    <section class="panel"><h2>Sensor inputs</h2><p>Enter one reading to request a prediction.</p>
+        <form method="post" asp-action="Predict">
+            <div asp-validation-summary="All" class="validation" role="alert"></div>
+            <div class="fields">
+                <label>Product type<select asp-for="Input.Type" required><option value="">Select product type</option><option value="L">L — Low</option><option value="M">M — Medium</option><option value="H">H — High</option></select></label>
+                <label>Air temperature (K)<input asp-for="Input.AirTemperature" type="number" step="any" required /></label>
+                <label>Process temperature (K)<input asp-for="Input.ProcessTemperature" type="number" step="any" required /></label>
+                <label>Rotational speed (rpm)<input asp-for="Input.RotationalSpeed" type="number" min="0" step="1" required /></label>
+                <label>Torque (N·m)<input asp-for="Input.Torque" type="number" min="0" step="any" required /></label>
+                <label>Tool wear (min)<input asp-for="Input.ToolWear" type="number" min="0" step="1" required /></label>
+            </div>
+            <button type="submit">Run prediction <span aria-hidden="true">↗</span></button>
+        </form>
+    </section>
+    <section class="panel"><h2>Prediction result</h2>
+        @if (Model.Error is not null) { <p class="notice" role="alert">@Model.Error</p> }
+        else if (Model.Result is { } result)
+        {
+            <span class="pill @(result.PredictedClass == 0 ? "ready" : "muted")">@(result.PredictedClass == 0 ? "Normal" : "Failure flagged")</span>
+            <dl class="key-values"><dt>Predicted class</dt><dd>@result.PredictedClass</dd><dt>Failure score</dt><dd>@result.FailureScore.ToString("0.000000")</dd><dt>Decision threshold</dt><dd>@result.DecisionThreshold</dd><dt>Model version</dt><dd>@result.ModelVersion</dd><dt>Prediction time (UTC)</dt><dd>@result.PredictionTimestamp.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss")</dd></dl>
+        }
+        else { <p>Results appear here after a prediction request.</p> }
+        <p class="fine-print">The score is uncalibrated for real-world use. The model was trained on synthetic data.</p>
+    </section>
+</div>

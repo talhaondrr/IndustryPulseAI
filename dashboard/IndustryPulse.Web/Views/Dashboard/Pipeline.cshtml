@@ -1,0 +1,17 @@
+@model Page<Summary>
+@{ ViewData["Title"] = "Data Pipeline"; }
+<header class="page-heading"><div><span class="eyebrow">INFRASTRUCTURE</span><h1>Data Pipeline</h1><p>Trace the batch and streaming paths into PostgreSQL.</p></div></header>
+<section class="panel"><h2>Batch ingestion</h2><p>The ETL validates identifiers and measurements before a transactional upsert.</p><ol class="flow"><li>AI4I CSV</li><li>Validate &amp; transform</li><li>PostgreSQL training tables</li></ol></section>
+<section class="panel"><h2>Stream processing</h2><p>Spark validates events, persists offsets in a checkpoint, and writes unique event IDs through a transactional sink.</p><ol class="flow"><li>Sensor simulator</li><li>Kafka topic</li><li>Spark micro-batch</li><li>Stream table</li></ol></section>
+<section class="panel"><h2>Verified counts and timing</h2>
+    @if (Model.Data is { } data)
+    {
+        <dl class="key-values"><dt>Product types</dt><dd>@data.ProductTypes.ToString("N0")</dd><dt>Sensor readings</dt><dd>@data.SensorRecords.ToString("N0")</dd><dt>Failure label rows</dt><dd>@data.FailureRecords.ToString("N0")</dd><dt>Training view rows</dt><dd>@data.TrainingRecords.ToString("N0")</dd><dt>Stream rows</dt><dd>@(data.StreamEvents?.ToString("N0") ?? "Unavailable")</dd><dt>Current count query</dt><dd>@data.CountQueryMs.ToString("F1") ms</dd><dt>Verified ETL replay</dt><dd>@(data.EtlBenchmark is { } bench ? $"{bench.DurationMs:N1} ms · {bench.Records:N0} rows" : "Unavailable")</dd></dl>
+        @if (data.EtlBenchmark is { } measurement)
+        {
+            <p class="fine-print">Measured on @measurement.MeasuredAt.UtcDateTime.ToString("yyyy-MM-dd") UTC against the populated database. The outer benchmark transaction was rolled back.</p>
+        }
+    }
+    else { <p class="notice" role="alert">@Model.Error</p> }
+    <p>Batch idempotency and rollback were verified by regression tests. The count-query timing measures the current read-only check.</p>
+</section>

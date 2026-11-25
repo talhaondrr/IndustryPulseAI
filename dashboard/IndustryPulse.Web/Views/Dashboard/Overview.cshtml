@@ -1,0 +1,30 @@
+@model OverviewModel
+@{ ViewData["Title"] = "Overview"; }
+<header class="page-heading"><div><span class="eyebrow">OPERATIONS</span><h1>Overview</h1><p>Sensor coverage, failure distribution, and system readiness.</p></div><span class="pill outline">AI4I 2020</span></header>
+@if (Model.Summary.Data is { } data)
+{
+    <div class="metrics">
+        <article><span>Sensor records</span><strong>@data.SensorRecords.ToString("N0")</strong><small>PostgreSQL batch dataset</small></article>
+        <article><span>Failure records</span><strong>@data.Failures.ToString("N0")</strong><small>@data.Normal.ToString("N0") labeled normal</small></article>
+        <article><span>Failure rate</span><strong>@data.FailureRate.ToString("0.00")<em>%</em></strong><small>Of labeled training records</small></article>
+        <article><span>Stored stream events</span><strong>@(data.StreamEvents?.ToString("N0") ?? "—")</strong><small>Unique events persisted by Spark</small></article>
+    </div>
+}
+else { <p class="notice" role="alert">@Model.Summary.Error</p> }
+<div class="overview-grid">
+    <section class="panel"><h2>Failure distribution</h2><p>Recorded labels in the synthetic dataset</p>
+        @if (Model.Summary.Data is { } counts)
+        {
+            <div class="distribution">
+                <div class="donut"><canvas aria-label="Normal versus failure record counts" role="img" id="distribution" data-normal="@counts.Normal" data-failed="@counts.Failures"></canvas>
+                    <div class="donut-center"><strong>@counts.TrainingRecords.ToString("N0")</strong><small>Total labeled</small></div></div>
+                <ul class="legend"><li><i></i>Normal<strong>@counts.Normal.ToString("N0")</strong></li><li><i></i>Failure<strong>@counts.Failures.ToString("N0")</strong></li></ul>
+            </div>
+        }
+        else { <p>Failure counts are currently unavailable.</p> }
+    </section>
+    <section class="panel"><h2>System components</h2><p>Observed readiness from the analytics API</p>
+        @if (Model.Health.Data is { } services) { <partial name="_Components" model="services" /> }
+        else { <p class="notice" role="alert">@Model.Health.Error</p> }
+    </section>
+</div>

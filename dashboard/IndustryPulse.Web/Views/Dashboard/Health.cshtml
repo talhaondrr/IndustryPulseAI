@@ -1,0 +1,14 @@
+@model Page<List<ComponentHealth>>
+@{ ViewData["Title"] = "System Health"; }
+<header class="page-heading"><div><span class="eyebrow">INFRASTRUCTURE</span><h1>System Health</h1><p>Service checks from the local dashboard.</p></div><a href="/system-health" class="pill outline">Refresh</a></header>
+<section class="panel"><h2>Component readiness</h2><p>Checks are performed when this page loads.</p>
+    @if (Model.Data is { } services) { <partial name="_Components" model="services" /> }
+    else
+    {
+        <p class="notice" role="alert">@Model.Error</p>
+        <ul class="components"><li><strong>FastAPI</strong><span class="pill muted">Unavailable</span></li>
+        @foreach (var name in new[] { "XGBoost model", "PostgreSQL", "Kafka", "Spark" })
+        { <li><strong>@name</strong><span class="pill muted">Unknown</span></li> }
+        </ul>
+    }
+</section>

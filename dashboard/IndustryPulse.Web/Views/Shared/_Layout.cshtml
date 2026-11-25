@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@ViewData["Title"] · IndustryPulse</title>
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <script src="~/lib/chart.umd.js" defer></script>
+    <script src="~/js/dashboard.js" asp-append-version="true" defer></script>
+</head>
+<body>
+    <aside class="sidebar">
+        <a class="brand" href="/"><span class="brand-icon" aria-hidden="true">◈</span><span>IndustryPulse<span class="brand-ai">AI</span></span></a>
+        <nav aria-label="Dashboard">
+            @foreach (var item in new[] { ("/", "Overview", "▦"), ("/sensor-monitor", "Sensor Monitor", "⌁"), ("/ai-prediction", "AI Prediction", "✧"), ("/model-analytics", "Model Analytics", "▥"), ("/data-pipeline", "Data Pipeline", "⇢"), ("/system-health", "System Health", "◉") })
+            {
+                var active = Context.Request.Path == item.Item1;
+                <a href="@item.Item1" class="@(active ? "active" : "")" aria-current="@(active ? "page" : null)"><span aria-hidden="true">@item.Item3</span>@item.Item2</a>
+            }
+        </nav>
+        <div class="sidebar-footer"><span></span> Local workspace</div>
+    </aside>
+    <main>
+        @RenderBody()
+        <footer>IndustryPulseAI · Synthetic AI4I 2020 data</footer>
+    </main>
+</body>
+</html>

@@ -1,0 +1,40 @@
+@model AnalyticsPage
+@{ ViewData["Title"] = "Model Analytics"; }
+<header class="page-heading"><div><span class="eyebrow">INTELLIGENCE</span><h1>Model Analytics</h1><p>Compare published validation results and inspect the held-out XGBoost evaluation.</p></div></header>
+<section class="panel">
+    <h2>Experiment tracking</h2>
+    <p>@Model.Tracking.Message</p>
+    @if (Model.Tracking.Version is { } version)
+    {
+        <dl class="key-values">
+            <dt>IndustryPulse-XGBoost Registry version</dt><dd>@($"v{version}")</dd>
+            <dt>Source artifact version</dt><dd>@Model.Tracking.DeploymentVersion</dd>
+        </dl>
+    }
+    <a class="pill outline" href="@Model.Tracking.Url">Open MLflow tracking</a>
+</section>
+@if (Model.Metrics.Data is { } data)
+{
+    <section class="panel"><h2>Cross-validation</h2><p>Seven models · mean metrics across five stratified folds</p>
+        <div class="chart-frame tall"><canvas id="comparison" role="img" aria-label="Average Precision by model"></canvas></div>
+        <div class="table-wrap"><table id="cv-table"><thead><tr><th>Model</th><th>Average Precision</th><th>Accuracy</th><th>Balanced accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr></thead><tbody>
+        @foreach (var row in data.CrossValidation)
+        {
+            <tr><td>@row.Model</td><td>@row.AveragePrecision.ToString("F4")</td><td>@row.Accuracy.ToString("F4")</td><td>@row.BalancedAccuracy.ToString("F4")</td><td>@row.Precision.ToString("F4")</td><td>@row.Recall.ToString("F4")</td><td>@row.F1.ToString("F4")</td><td>@row.RocAuc.ToString("F4")</td></tr>
+        }
+        </tbody></table></div>
+    </section>
+    <div class="overview-grid analytics-lower">
+        <section class="panel"><h2>Independent test · @data.IndependentTest.Model</h2><p>Confusion matrix · actual rows, predicted columns</p>
+            <table class="matrix"><thead><tr><th scope="col">Actual</th><th scope="col">Normal</th><th scope="col">Failure</th></tr></thead><tbody><tr><th scope="row">Normal</th><td>@data.IndependentTest.Tn</td><td>@data.IndependentTest.Fp</td></tr><tr><th scope="row">Failure</th><td>@data.IndependentTest.Fn</td><td>@data.IndependentTest.Tp</td></tr></tbody></table>
+            <dl class="key-values">
+                @foreach (var metric in new[] { ("Average Precision",data.IndependentTest.AveragePrecision), ("Accuracy",data.IndependentTest.Accuracy), ("Balanced accuracy",data.IndependentTest.BalancedAccuracy), ("Precision",data.IndependentTest.Precision), ("Recall",data.IndependentTest.Recall), ("F1",data.IndependentTest.F1), ("ROC-AUC",data.IndependentTest.RocAuc) })
+                { <dt>@metric.Item1</dt><dd>@metric.Item2.ToString("F4")</dd> }
+            </dl>
+        </section>
+        <section class="panel"><h2>MLP training loss</h2><p>Weighted BCE averaged across training folds</p>
+            <div class="chart-frame tall"><canvas id="loss" role="img" aria-label="MLP loss by epoch" data-loss="@System.Text.Json.JsonSerializer.Serialize(data.MlpTrainingLoss)"></canvas></div>
+        </section>
+    </div>
+}
+else { <p class="notice" role="alert">@Model.Metrics.Error</p> }

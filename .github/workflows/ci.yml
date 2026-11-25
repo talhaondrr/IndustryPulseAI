@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python, PostgreSQL and MLflow
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RUN_MLFLOW_TESTS: "1"
+      MLFLOW_DISABLE_AGENT_HINT: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip check
+      - name: Start disposable PostgreSQL and prepare data
+        run: |
+          password=$(openssl rand -hex 24)
+          echo "::add-mask::$password"
+          cp .env.example .env
+          printf 'POSTGRES_PASSWORD=%s\n' "$password" >> .env
+          docker compose up -d --wait postgres
+          python -m src.init_database
+          python -m pipelines.etl_pipeline
+          python -m src.export_model
+      - name: Start local MLflow
+        run: |
+          mkdir -p .mlflow/artifacts
+          python -m mlflow server --host 127.0.0.1 --port 5000 --workers 1 \
+            --backend-store-uri sqlite:///.mlflow/tracking.db \
+            --serve-artifacts --artifacts-destination .mlflow/artifacts \
+            > .mlflow/server.log 2>&1 &
+          for attempt in {1..45}; do
+            if curl --silent --fail http://127.0.0.1:5000/health; then exit 0; fi
+            sleep 2
+          done
+          tail -n 30 .mlflow/server.log
+          exit 1
+      - name: Test Python (Kafka and Spark integrations are reported separately)
+        run: python -m unittest discover -s tests -v
+      - name: Stop disposable services
+        if: always()
+        run: |
+          if test -f .env; then docker compose stop postgres; fi
+
+  dashboard:
+    name: ASP.NET Core MVC build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build dashboard/IndustryPulse.Web/IndustryPulse.Web.csproj --configuration Release
+
+  streaming:
+    name: Kafka and Spark integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RUN_KAFKA_TESTS: "1"
+      RUN_SPARK_STREAM_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Start disposable PostgreSQL and Kafka
+        run: |
+          password=$(openssl rand -hex 24)
+          echo "::add-mask::$password"
+          cp .env.example .env
+          printf 'POSTGRES_PASSWORD=%s\n' "$password" >> .env
+          docker compose --profile streaming up -d --wait postgres kafka
+          docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh \
+            --bootstrap-server kafka:29092 --create --if-not-exists \
+            --topic industrial-sensor-data --partitions 1 --replication-factor 1
+          python -m src.init_database
+          python -m pipelines.etl_pipeline
+      - name: Test Kafka and Spark sequentially
+        run: |
+          python -m unittest discover -s tests -p test_streaming.py -v
+          python -m unittest discover -s tests -p test_spark.py -v
+      - name: Stop disposable services
+        if: always()
+        run: |
+          if test -f .env; then docker compose --profile streaming stop postgres kafka; fi

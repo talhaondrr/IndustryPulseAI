@@ -1,0 +1,98 @@
+{
+  "model_name": "XGBoost",
+  "model_version": "1.0.0",
+  "trained_at": "2026-11-25T11:17:36.949726+00:00",
+  "input_features": [
+    "Type",
+    "Air temperature [K]",
+    "Process temperature [K]",
+    "Rotational speed [rpm]",
+    "Torque [Nm]",
+    "Tool wear [min]"
+  ],
+  "training_records": 8000,
+  "hyperparameters": {
+    "objective": "binary:logistic",
+    "enable_categorical": false,
+    "eval_metric": "logloss",
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "missing": "NaN",
+    "n_estimators": 200,
+    "n_jobs": 1,
+    "random_state": 42,
+    "tree_method": "hist"
+  },
+  "class_weighting": "balanced sample weights calculated from the 8,000 training records",
+  "decision_threshold": 0.5,
+  "decision_rule": "failure_score > decision_threshold",
+  "library_versions": {
+    "python": "3.12.10",
+    "joblib": "1.6.0",
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.2.0"
+  },
+  "dataset": {
+    "name": "AI4I 2020 Predictive Maintenance Dataset",
+    "source": "public.ml_training_data",
+    "synthetic": true,
+    "records": 10000,
+    "failures": 339,
+    "training_failures": 271,
+    "split": {
+      "test_size": 0.2,
+      "stratified": true,
+      "random_state": 42
+    }
+  },
+  "previous_metrics": {
+    "cross_validation": {
+      "source": "results/model_comparison.csv",
+      "accuracy_mean": 0.949625,
+      "accuracy_std": 0.00547723,
+      "balanced_accuracy_mean": 0.89731685,
+      "balanced_accuracy_std": 0.02871639,
+      "precision_mean": 0.39022334,
+      "precision_std": 0.02304523,
+      "recall_mean": 0.84121212,
+      "recall_std": 0.06522373,
+      "f1_mean": 0.53139233,
+      "f1_std": 0.00864188,
+      "roc_auc_mean": 0.97400743,
+      "roc_auc_std": 0.01109549,
+      "average_precision_mean": 0.76432948,
+      "average_precision_std": 0.0703066,
+      "fit_seconds_mean": 0.16076522,
+      "fit_seconds_std": 0.1635392,
+      "tn": 7369,
+      "fp": 360,
+      "fn": 43,
+      "tp": 228,
+      "folds": 5
+    },
+    "independent_test": {
+      "source": "results/test_metrics.csv",
+      "accuracy": 0.955,
+      "balanced_accuracy": 0.92704908,
+      "precision": 0.42361111,
+      "recall": 0.89705882,
+      "f1": 0.5754717,
+      "roc_auc": 0.98416758,
+      "average_precision": 0.8428867,
+      "tn": 1849,
+      "fp": 83,
+      "fn": 7,
+      "tp": 61,
+      "fit_seconds": 0.0979072,
+      "records": 2000
+    }
+  },
+  "limitations": [
+    "Veri seti sentetiktir ve sonuçlar gerçek fabrikalardaki performansı garanti etmez.",
+    "XGBoost skoru kalibre edilmiş gerçek dünya arıza olasılığı değildir."
+  ],
+  "artifact_sha256": "b9c9afb4214c96831b36830191d12483af0dd511690c11a8d32efe9e09c56760"
+}

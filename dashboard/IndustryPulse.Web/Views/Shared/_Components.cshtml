@@ -1,0 +1,8 @@
+@model List<ComponentHealth>
+<ul class="components">
+    @foreach (var service in Model)
+    {
+        <li><div><strong>@service.Name</strong><small>@service.Detail</small></div>
+            <span class="pill @(service.Status == "Ready" ? "ready" : "muted")">@service.Status</span></li>
+    }
+</ul>
