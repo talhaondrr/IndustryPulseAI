@@ -107,6 +107,16 @@ jobs:
       - name: Test Kafka and Spark sequentially
         run: |
           python -m unittest discover -s tests -p test_streaming.py -v
+          mkdir -p .spark
+          cat > .spark/ci-ivysettings.xml <<'EOF'
+          <ivysettings>
+            <settings defaultResolver="maven-central"/>
+            <resolvers>
+              <ibiblio name="maven-central" m2compatible="true" root="https://repo.maven.apache.org/maven2/"/>
+            </resolvers>
+          </ivysettings>
+          EOF
+          export PYSPARK_SUBMIT_ARGS="--conf spark.jars.ivySettings=$PWD/.spark/ci-ivysettings.xml pyspark-shell"
           python -m unittest discover -s tests -p test_spark.py -v
       - name: Stop disposable services
         if: always()
