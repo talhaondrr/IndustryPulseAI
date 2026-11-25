@@ -23,9 +23,13 @@ def load_data(path: str | Path) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
-def select_features(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+def select_features(
+    data: pd.DataFrame, *, from_training_view: bool = False
+) -> tuple[pd.DataFrame, pd.Series]:
     """Beklenen şemayı doğrula; izin verilen girdiler ile hedefi ayır."""
-    required = FEATURES + EXCLUDED_COLUMNS + [TARGET]
+    required = FEATURES + [TARGET]
+    if not from_training_view:
+        required += EXCLUDED_COLUMNS
     missing_columns = [column for column in required if column not in data.columns]
     if missing_columns:
         raise ValueError(f"Eksik sütunlar: {missing_columns}")

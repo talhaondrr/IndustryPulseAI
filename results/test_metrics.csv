@@ -1,0 +1,2 @@
+model,accuracy,balanced_accuracy,precision,recall,f1,roc_auc,average_precision,tn,fp,fn,tp,fit_seconds
+XGBoost,0.95500000,0.92704908,0.42361111,0.89705882,0.57547170,0.98416758,0.84288670,1849,83,7,61,0.09790720
